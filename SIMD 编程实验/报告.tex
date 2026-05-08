@@ -1,0 +1,496 @@
+\documentclass[a4paper]{article}
+
+\input{style/ch_xelatex.tex}
+\input{style/scala.tex}
+
+%代码段设置
+\lstset{numbers=left,
+basicstyle=\tiny,
+numberstyle=\tiny,
+keywordstyle=\color{blue!70},
+commentstyle=\color{red!50!green!50!blue!50},
+frame=single, rulesepcolor=\color{red!20!green!20!blue!20},
+escapeinside=``
+}
+
+\graphicspath{ {images/} }
+\usepackage{ctex}
+\usepackage{graphicx}
+\usepackage{color,framed}%文本框
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{amssymb}
+\usepackage{enumerate}
+\usepackage{xcolor}
+\usepackage{bm} 
+\usepackage{lastpage}%获得总页数
+\usepackage{fancyhdr}
+\usepackage{tabularx}  
+\usepackage{geometry}
+\usepackage{minted}
+\usepackage{graphics}
+\usepackage{subfigure}
+\usepackage{float}
+\usepackage{pdfpages}
+\usepackage{pgfplots}
+\pgfplotsset{width=10cm,compat=1.9}
+\usepackage{multirow}
+\usepackage{footnote}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usepackage{tabularx}
+\usetikzlibrary{shapes,arrows}
+
+
+%-----------------------伪代码------------------
+\usepackage{algorithm}  
+\usepackage{algorithmicx}  
+\usepackage{algpseudocode}  
+\floatname{algorithm}{Algorithm}  
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}  
+\renewcommand{\algorithmicensure}{\textbf{Output:}} 
+\usepackage{lipsum}  
+\makeatletter
+\newenvironment{breakablealgorithm}
+  {% \begin{breakablealgorithm}
+  \begin{center}
+     \refstepcounter{algorithm}% New algorithm
+     \hrule height.8pt depth0pt \kern2pt% \@fs@pre for \@fs@ruled
+     \renewcommand{\caption}[2][\relax]{% Make a new \caption
+      {\raggedright\textbf{\ALG@name~\thealgorithm} ##2\par}%
+      \ifx\relax##1\relax % #1 is \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##2}%
+      \else % #1 is not \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##1}%
+      \fi
+      \kern2pt\hrule\kern2pt
+     }
+  }{% \end{breakablealgorithm}
+     \kern2pt\hrule\relax% \@fs@post for \@fs@ruled
+  \end{center}
+  }
+\makeatother
+%------------------------代码-------------------
+\usepackage{xcolor} 
+\usepackage{listings} 
+\lstset{ 
+breaklines,%自动换行
+basicstyle=\small,
+escapeinside=``,
+keywordstyle=\color{ blue!70} \bfseries,
+commentstyle=\color{red!50!green!50!blue!50},% 
+stringstyle=\ttfamily,% 
+extendedchars=false,% 
+linewidth=\textwidth,% 
+numbers=left,% 
+numberstyle=\tiny \color{blue!50},% 
+frame=trbl% 
+rulesepcolor= \color{ red!20!green!20!blue!20} 
+}
+
+%-------------------------页面边距--------------
+\geometry{a4paper,left=2.3cm,right=2.3cm,top=2.7cm,bottom=2.7cm}
+%-------------------------页眉页脚--------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{\kaishu \leftmark}
+% \chead{}
+\rhead{\kaishu 并行程序设计实验报告}%加粗\bfseries 
+\lfoot{}
+\cfoot{\thepage}
+\rfoot{}
+\renewcommand{\headrulewidth}{0.1pt}  
+\renewcommand{\footrulewidth}{0pt}%去掉横线
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}%标题横线
+\newcommand{\HRulegrossa}{\rule{\linewidth}{1.2mm}}
+\setlength{\textfloatsep}{10mm}%设置图片的前后间距
+%--------------------文档内容--------------------
+
+\begin{document}
+\renewcommand{\contentsname}{目\ 录}
+\renewcommand{\appendixname}{附录}
+\renewcommand{\appendixpagename}{附录}
+\renewcommand{\refname}{参考文献} 
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\renewcommand{\today}{\number\year 年 \number\month 月 \number\day 日}
+
+%-------------------------封面----------------
+\begin{titlepage}
+    \begin{center}
+    \includegraphics[width=0.8\textwidth]{NKU.png}\\[1cm]
+    \vspace{20mm}
+		\textbf{\huge\textbf{\kaishu{计算机学院}}}\\[0.5cm]
+		\textbf{\Huge\textbf{\kaishu{NTT选题：SIMD优化}}}
+
+		\vspace{\fill}
+    
+    % \textbf{\Large \textbf{并行程序设计期末实验报告}}\\[0.8cm]
+    % \HRule \\[0.9cm]
+    % \HRule \\[2.0cm]
+    \centering
+    \textsc{\LARGE \kaishu{姓名\ :\ 钱展飞}}\\[0.5cm]
+    \textsc{\LARGE \kaishu{学号\ :\ 2312479}}\\[0.5cm]
+    \textsc{\LARGE \kaishu{专业\ :\ 计算机科学与技术}}\\[0.5cm]
+    
+    \vfill
+    {\Large \today}
+    \end{center}
+\end{titlepage}
+
+\renewcommand {\thefigure}{\thesection{}.\arabic{figure}}%图片按章标号
+\renewcommand{\figurename}{图}
+\renewcommand{\contentsname}{目录}  
+\cfoot{\thepage\ of \pageref{LastPage}}%当前页 of 总页数
+
+
+% 生成目录
+\clearpage
+\tableofcontents
+\newpage
+
+%--------------------------Title--------------ccc------------------
+
+\section{概述}
+
+多项式乘法作为基础的数学运算，在信号处理，计算机图形学，密码学等领域有着广泛的应用。在该并行选题中，我们重点关注同态加密中的多项式乘法，同态加密可以在密文上进行运算，对运算后的密文进行解密的结果等于明文直接运算的结果，这在安全领域中是非常重要的技术，而同态加密的其中一项关键组成部分便是多项式乘法。
+
+\section{NTT算法原理}
+
+NTT算法是基于FFT算法的，因此在这一部分，我们将先介绍 FFT 算法的原理，再介绍 FFT 如何演化成 NTT，最后介绍蝴蝶变换。
+
+\subsection{FFT算法原理}
+
+\subsubsection{FFT 概述}
+
+若要对两个多项式 $F(x), G(x)$ 进行乘法操作，则需要将两个多项式的每一项依次相乘，时间复杂度为 $O(n^2)$ 。
+
+若可以将两个多项式分别转化为点值表示，再将两个多项式相乘，此时两个多项式相乘只需要将所有点值对位相乘，时间复杂度为 $O(n)$ 。根据代数基本定理的推论，对于一个 $n$ 次多项式，只需要直到其在 $n + 1$ 个不同位置上的点值，就可以唯一确定这个多项式，从而通过拉格朗日插值求出这个多项式的系数表示法，然而拉格朗日插值求多项式系数的复杂度为 $O(n^3)$，通过选取特定的点可以将复杂度下降到 $O(n^2)$，然而这仍然没有优化时间复杂度。
+
+FFT 通过选取特定位置上的点，可以在 $o(n \log n)$ 的时间复杂度内快速求出 $n$ 个点上的点值，并将多项式的点值表示法转化成系数表示法，从而使得多项式乘法的时间复杂度下降到 $O(n \log n)$。
+
+\subsubsection{FFT 原理}
+
+首先定义 $W_n = e^{\frac{2 \pi i}{n}}$ 为 $n$ 阶单位元。注意到所有的 $W_n^k$ 即为从复平面上单位元等距离选取的 $n$ 个点。
+
+定义一个长度为 $n$ 的数列 $x$ 的离散傅里叶变换的第 $k$ 项为 $DFT(x,n)_k = \sum_{i = 0}^{n - 1} x_i W_n^{ki}$ 。
+
+注意到若将一个多项式的系数写成数列，则这个数列的 DFT 就是这个多项式的点值表示法，其中选取的 $n$ 个点值分别是这个多项式在 $n$ 个单位根上的点值。
+
+直接计算 DFT 的复杂度仍然是 $O(n^2)$ ，但是注意到 DFT 具有如下性质（其中 $DFT(a,n)_k$ 表示对长度为 $n$ 的序列 $a$ 做dft后得到的第 $k$ 项）：
+
+$$DFT(x,n)_k = \sum_{i = 0}^{n - 1} x_i W_n^{ki}$$
+$$=\sum_{i = 0}^{\frac{n}{2}-1}x_{2i} W_{n}^{2ki} + \sum_{i = 0}^{\frac{n}{2} - 1} x_{2i+1} W_n^{2ki+k}$$
+$$=\sum_{i = 0}^{\frac{n}{2}-1} x_{2i} W_{\frac{n}{2}}^{ki} + (\sum_{i = 0}^{\frac{n}{2}-1} x_{2i + 1} W_{\frac{n}{2}}^{ki}) \times W_n^k$$
+$$DFT(x,n)_k = DFT(\{x_0, x_2,...x_{n-1}\},\frac{n}{2})_k + DFT(\{x_1, x_3...x_{n-1}\},\frac{n}{2})_k \times W_n^k, (k < \frac{n}{2})$$
+
+这样可以将一个 $n$ 个值的 DFT 递归到两个 $\frac{n}{2}$ 的值进行计算。
+
+但是注意到递归计算的两个 DFT 只有 $\frac{n}{2}$ 项，因此只有在 $k < \frac{n}{2}$ 时可以这样计算。
+
+由于 $n$ 阶单位根 $W_n$ 有极好的性质：$W_{2n}^k = W_{2n}^{k+2n}= -W_{2n}^{k + n}$，因此在 $k \ge \frac{n}{2}$ 时，可以写成 $DFT(x,n)_k = DFT(\{x_0, x_2...x_n-2\},\frac{n}{2})_{k-\frac{n}{2}} - DFT(\{x_1, x_3...x_{n-1}\},\frac{n}{2})_{k - \frac{n}{2}} \times W_n^{k+\frac{n}{2}}, (k \ge \frac{n}{2})$。最终我们有 :
+
+$$DFT(x,n)_k = DFT(\{x_0, x_2,...x_{n-1}\},\frac{n}{2})_k + DFT(\{x_1, x_3...x_{n-1}\},\frac{n}{2})_k \times W_n^k, (k < \frac{n}{2})$$
+$$DFT(x,n)_k = DFT(\{x_0, x_2...x_n-2\},\frac{n}{2})_{k-\frac{n}{2}} - DFT(\{x_1, x_3...x_{n-1}\},\frac{n}{2})_{k - \frac{n}{2}} \times W_n^{k+\frac{n}{2}}, (k \ge \frac{n}{2})$$
+
+这样就可以计算两个长度为 $\frac{n}{2}$ 的 DFT 从而得出长度为 $n$ 的 DFT，这样总的时间复杂度为 $O(n \log n)$。这就是FFT加速计算DFT的原理。将这一的过程反过来即可以将点值表示法转化成系数表示法。
+
+\subsection{NTT 原理}
+
+由于在进行 $FFT$ 计算时，需要进行复数的乘法，导致每次乘法实际上是对两个浮点数做乘法，导致运行时常数很大，运行时间很长，还可能出现精度损失导致错误。
+
+由于我们在进行多项式乘法而不是数字信号处理，实际上要计算的 DFT 并不需要是复数形式的 ，只需要找到一个满足单位根性质的数，将其替代单位根即可。
+
+最终我们找到的替代品为原根，原根的定义是模质数乘法群的生成元，由质数阶群一定是循环群可以得知，原根一定存在。
+
+原根满足上述的单位根的几条性质，因此可以用原根取代单位根进行运算。但没有复数乘法的同时，我们又引入的取模乘法，取模乘法同样常数巨大，因此要通过 Montgomery 方法对其进行优化。
+
+此时我们已经可以完成递归版的ntt，但是由于递归版ntt需要调用系统栈进行回溯，运行时间远大于迭代版ntt，这可能导致我们难以分析SIMD对ntt的优化效果，因此之后的代码中只会出现迭代版的ntt。
+
+\subsection{蝴蝶变换}
+
+由于在递归进行 NTT 时，需要将奇数和偶数分别求 DFT，即将所有奇数项放在数列最左边，将所有偶数项放在最右边，而在迭代版中，我们不会将数字的位置进行改变，因此需要在变换前或者变换后再将所有数字的位置进行改变（分别对应 DIT, DIF两种 FFT 方法）。
+
+由于蝴蝶变换的具体推理过程过于复杂，因此这里只展现蝴蝶变换的递推式。
+
+$$r_i = \frac{r_{\frac{i}{2}}}{2} | \frac{lmt}{2} \times (i \& 1)$$
+
+\section{SIMD 优化}
+
+\subsection{NEON Intrinsics}
+
+SIMD（Single Instruction，Multiple Data）即单指令多数据。简而言之，它是对指令集的一种扩展，可以对多个数值进行相同操作，这样可以在更短的时间内计算更多的数值。
+
+NEON 是指适用于 Arm Cortex-A系列处理器的一种高级 SIMD（单指令多数据）扩展指令集。
+
+一些常用的向量寄存器包括：
+\begin{lstlisting}[title=Vectors,frame=trbl,language={c++}]
+uint32x2_t, uint32x4_t, uint64x2_t
+int32x2_t, int32x4_t
+\end{lstlisting}
+
+一些常用的函数包括：
+\begin{lstlisting}[title=Functions,frame=trbl,language={c++}]
+
+vadd_u32, vsub_u32, vmul_u32 //分别表示对uint32x2_t进行加法，减法和乘法
+vaddq_u32, vsubq_u32, vmulq_u32 //分别表示对uint32x4_t进行加法，减法和乘法
+vmull_u32 //表示将两个uint32x2_t相乘并存储在uint64x2_t中
+vdup_n_u32 //表示将一个uint32_t重复两次存储在一个uint32x2_t中
+vdupq_n_u32 //将一个uint32_t重复四次存储在一个 uint32x4_t中
+vcge_u32 //将两个uint32x2_t进行对位比较，若第一个向量大于等于第二个向量，则置位全一，否则全0。
+vset_lane_u32 //改变uint32x2_t的单个通道的值
+vget_lane_u32 //获取uint32x2_t的当个通道的值
+
+\end{lstlisting}
+
+可以注意到neon一些函数的命名规则，一般函数由三部分或者两部分组成，第一部分表示要进行的操作，如vset,vget,vadd等，若第一部分由q结尾，则表示要对128位的向量进行操作，否则表示对64位的向量进行操作bu；中间lane表示是否是对单个通道进行操作，若不包含这一部分则表示对整体进行操作；最后一部分表示向量的类型，如u32,i32,f32等。
+
+然而neon函数中不包含取模运算，因此如果设计新的取模算法，每次计算乘法时都需要将向量中的每个通道取出单独进行计算，可能导致算法运行时间不降反增。
+
+\subsection{Montgomery乘法}
+
+由于不适用 Montgomery 乘法就无法使用 SIMD 优化，因此这里将先介绍 Montgomery 乘法的原理。
+
+\subsubsection{Montgomery乘法的底层原理：在取模乘法下对2的n次幂进行快速除法}
+
+Montgomery 乘法的原理是基于在对质数 $p$ 的取模运算下，2的乘法逆元正是 $\frac{p+1}{2}$ ，这样我们就可以总结出如下规律：
+$$\frac{a}{2} \equiv \begin{cases}
+ \frac{a}{2},a\ is \ even\\
+\frac{a + p}{2}, a\ is \ odd
+\end{cases} (mod \ p)$$
+
+这样若要计算 $x \cdot 2^{-k}$ 在 $mod \ p$ 下的值，我们可以尝试找到这样的 $a$ ，满足 $a \equiv x (mod \ p), a \equiv 0(mod \ 2^k)$ ，之后将 $a$ 直接除以 $2^k$ 便可以求出 $x \cdot 2^{-k}$ 在对 $p$ 取模下的值。
+
+注意到我们可以构造这样的一个数 $a = x + p(x\mu)$ ，其中 $\mu \equiv -p^{-1} (mod \ 2^k)$ 。注意到这个数满足上述两个条件，只要预处理出 $\mu$ ，就可以用两次乘法，一次加法，一次位右移运算完成 $x$ 对 $2^k$ 的除法操作。注意到在计算 $p(x\mu)$ 时，可以先计算 $x \mu$ 并对 $2^k$ 取模，这样并不影响正确性，且能避免之后乘法溢出。
+
+注意到有 $p \mu < 2^k$ ，因此 $a = x + p(x\mu) < p + p \cdot 2^k$ ，最终有 $\frac{a}{2^k} < 2 \cdot p$ ，这样在除法后为了保证得数小于 $p$ 就不需要进行多余的取模操作，只需要再进行至多一次减法即可。
+
+\subsubsection{Montgomery形式下的运算}
+
+定义在对质数 $p$ 的取模运算下，一个数 $x$ 的 Montgomery 形式为 $\overline{x} = x \cdot 2^k$，这里 $k$ 一般取 32 或 64，这样在对 $2^k$ 取模时可以直接自然溢出。
+
+对于 Montgomery 形式下的加减法运算很好定义，与普通形式下的加减法相同：
+$$\overline{a} + \overline{b} \equiv \overline{a+b} \equiv (a + b) \cdot 2^k (mod \ p)$$
+
+$$\overline{a} - \overline{b} \equiv \overline{a-b} \equiv (a - b) \cdot 2^k (mod \ p)$$
+
+对于 Montgomery 形式下的乘法则与普通形式不同，定义 Montgomery 形式下的乘法运算符号为 $*$：
+
+$$\overline{a} * \overline{b} \equiv \overline{a \cdot b} \equiv a \cdot b \cdot 2^k \cdot 2^k \equiv \overline{a} \cdot \overline{b} \cdot 2^{-k} (mod \ p)$$
+
+此时将之前的计算除 $2^k$ 的方法带入进来：
+
+$$\overline{a} * \overline{b} \equiv \frac{\overline{a} \cdot \overline{b} + p \cdot \overline{a} \cdot \overline{b} \cdot \mu}{2^k} (mod \ p)$$
+
+其中在计算 $\overline{a} \cdot \overline{b} \cdot \mu$ 时可以使用32位无符号整数进行自然溢出乘法。
+
+注意到有 $\overline{a}\cdot \overline{b} \cdot \mu < 2^k$，则有 $\overline{a} \cdot \overline{b} + p \cdot \overline{a} \cdot \overline{b} \cdot \mu < p \cdot (p + 2^k)$，即 $\overline{a} * \overline{b} < \frac{p^2}{2^k} + p$，为了要保证 $\overline{a} * \overline{b} < 2\cdot p$ ，需要选取 $2^k > p$，这样在计算完 $\overline{a} * \overline{b}$ 才可以保证不需要进行多余的取模，只需要进行至多一次减法即可。
+
+最终得出进行一次取模乘法运算可以由 3 次乘法，1次加法，一次位右移运算和至多1次减法替代。
+
+在介绍原理时为了表示模数是素数一直使用 $p$ 作为模数，在下文介绍代码时为了符合代码习惯将使用 $mod$ 表示模数。
+
+\subsection{使用 SIMD 优化}
+
+在完成了 Montgomery 乘法之后，每次取模操作可以被其他更快的操作替代叼，我们可以使用 Neon 向量优化乘法。
+
+SIMD 优化可分为两部分，一是用 SIMD 实现 Montgomery 乘法，二是用 SIMD 加速 NTT 。
+
+\subsubsection{对于向量的选择}
+
+对于向量寄存器的选择，有主要有三个可能的选择，分别是 uin32x2\_t ，uint64x2\_t 和 uint32x4\_t 。
+
+对于uint32x4\_t向量，优点是可以同时进行四个数的运算，缺点是由于每次乘法时会溢出到64位，所以每次乘法都必须转化成两个 uint64x2\_t 进行运算，同时为了使用 uint32x4\_t 进行四个数同时计算，在 ntt 时步长为 2 和步长为 1 的部分都需要单独计算，步长大于等于4之后才能用向量优化。
+
+对于 uint64x2\_t 向量，优点是在乘法时不需要将相乘的数转化成 uint64x2\_t ，而可以直接相乘，缺点是大部分时间都只会用到低32位，对于高32位实际上是空的，可能导致占用空间更多，运行速度下降。
+
+最终在测试中，uint64x2\_t 的速度较慢，uint32x2\_t 和 uint64x2\_t 所使用的时间相似，因此在下文中只会讲述使用 uint32x2\_t 的代码。
+
+\subsubsection{使用 SIMD 实现 Montgomery形式下的运算}
+
+因为在测试时，我们需要完成对不同模数的 ntt ，每次改变模数都需要重新计算参数，因此我将 Montgomery 封装在一个类中，每次更改模数时重新计算参数。如下为初始化和更改模数时需要用到的代码：
+
+\begin{lstlisting}[title=Set New Modulus,frame=trbl,language={c++}]
+class Montgomery32{
+private:
+    void set_m_prime() {
+        uint32_t inv = 1;
+        for (int i = 0; i < 5; ++i) {
+            inv = inv * (2 - mod * inv);
+        }
+        m_prime = -inv;
+        m_prime_dup = vdup_n_u32(m_prime);
+    }
+    void set_r_mod() {
+        r_mod = (0x100000000ULL % mod); // 2^32 % mod
+    }
+    void set_r_squared_mod() {
+        r_squared_mod = ((uint64_t)r_mod * r_mod) % mod;
+        r_squared_mod_dup = vdup_n_u32(r_squared_mod);
+    }
+public:
+    // 设置新模数
+    void set_mod(uint32_t new_mod) {
+        mod = new_mod;
+        modx2 = vdup_n_u32(mod);
+        set_m_prime();
+        set_r_mod();
+        set_r_squared_mod();
+    }
+}
+\end{lstlisting}
+
+这里计算的几个参数分别为 :$r\_mod$ 表示 $2^{32}$ 在对 $mod$ 取模后的值； $r\_squared\_mod$ 表示 $(2^{32})^2$ 对 $mod$ 取模后的值；$m\_prime$ 表示 $\mu = -2^{-32}$ 在对 $mod$ 取模下的值，可以通过扩展欧几里得算法或牛顿迭代法求出，这里使用的是牛顿迭代法。
+
+接下来要用 SIMD 实现加法和减法。由于加法和减法逻辑类似，因此在这里一同介绍。
+
+\begin{lstlisting}[title=Add \& Sub,frame=trbl,language={c++}]
+uint32x2_t add(uint32x2_t a, uint32x2_t b) {
+    uint32x2_t sum = vadd_u32(a, b);
+    uint32x2_t mask = vcge_u32(sum, modx2);
+    return vsub_u32(sum, vand_u32(modx2, mask));
+}
+
+uint32x2_t sub(uint32x2_t a, uint32x2_t b) {
+    uint32x2_t diff = vsub_u32(a, b);
+    uint32x2_t mask = vclt_u32(a, b);
+    return vadd_u32(diff, vand_u32(modx2, mask));
+}
+\end{lstlisting}
+
+如上为实现加法和加法的代码，注意到两个数相加后不可能大于 $2\cdot mod$，因此只需要将判断两个数相加后是否大于 $mod$ ，若大于 $mod$ 就将返回值减去 $mod$ 即可。在向量化后，若要使用条件语句实现取模加法，则需要将每个通道单独取出进行判断，这里使用了 vcge\_u32 (cge = Compare Greater or Equal)判断相加的得数是否大于等于 $mod$ 若大于等于 $mod$ 就将该通道赋值为全1，否则为全0，之后将 vcge\_u32 的返回值与 $mod$ 向与，将相加得到的值和该值做差，即可得到取模后的值。
+
+对于减法操作也是类似，注意到两个数相减后不可能小于 $-mod$ ，因此只需要根据这两个数的大小关系判断是否需要将得到的差加上 $mod$ 即可。这里使用了 vlt\_u32(Compare Less Than) 函数判断两个数的大小，其余均与加法类似。
+
+加下来要用 SIMD 实现 Montgomery 取模乘法。这是最重要的一部分，实际上只需要将之前的公式翻译成代码即可。
+
+$$\overline{a} * \overline{b} \equiv \frac{\overline{a} \cdot \overline{b} + p \cdot \overline{a} \cdot \overline{b} \cdot \mu}{2^k} (mod \ p)$$
+
+\begin{lstlisting}[title=Montgomery Multiplication,frame=trbl,language={c++}]
+uint32x2_t multiply(uint32x2_t a, uint32x2_t b) {
+    uint64x2_t T = vmull_u32(a, b);
+    uint32x2_t T_lo = vmovn_u64(T);
+    uint32x2_t m = vmul_u32(T_lo, m_prime_dup);
+    uint64x2_t mN = vmull_u32(m, modx2);
+    uint64x2_t sum = vaddq_u64(T, mN);
+    uint32x2_t res = vshrn_n_u64(sum, 32);
+    return vsub_u32(res, vand_u32(modx2, vcge_u32(res, modx2)));
+}
+\end{lstlisting}
+
+如上是使用 SIMD 完成的 Montgomery 乘法。
+
+输入需要是两个 Montgomery 形式的数，返回值为这两个数的积的 Montgomery 形式。代码逻辑如下。
+
+首先将两个向量相乘，并储存在 uint64x2\_t 向量 T 中，这里为了防止溢出使用了 uint64x2\_t ，之后取 T 两个通道的低32位（相当于对 $2^{32}$ 取模），记为 T\_lo，并与 m\_prime 相乘，记为 m ，这里的 m\_prime 正是上文中的 $\mu$ ，用无符号32位向量做乘法自然溢出等价于对 $2^{32}$ 取模，之后将 m 与 mod相乘比储存在 uint64x2\_t 向量 mN 中，最后将 mN 与 T 相加并右移 32 位得到最终的结果 res。返回时需要判断 res 是否大于 mod ，若大于 mod 则减去 mod，这一部分与减法的处理相同。
+
+最后一部分是用 SIMD 完成普通数和 Montgomery 形式之间的转化，这一部分可以直接用之前乘法进行实现，即：
+$$x * (2^{32})^2 \equiv x \cdot (2^{32})^2 \cdot 2^{-32} \equiv x \cdot 2^{32} (mod\ p)$$
+$$x * 1 \equiv x \cdot 2^{-32} (mod\ p)$$
+其中第一个式子表示将一个数转化成 Montgomery 形式的数，第二个式子表示将一个 Montgomery 形式的数转化成普通形式。由于代码很简单，直接调用乘法即可，这里不加展示。
+
+\subsubsection{使用 SIMD 改进 NTT}
+
+为了使用 SIMD 改进 NTT，首先要对迭代版的 NTT 有更深刻的认识。在 NTT 的三重循环中，第一重为枚举步长，第二重为将序列按照步长分块，每一次循环处理一个块，第三重循环为处理一个块内的数据，在处理一个块内的数据时，若块的大小大于等于 $2$ ，我们就可以使用 uint32x2\_t 同时处理两个数的运算，从而实现优化。而对于步长小于 $2$ 的情况，则需要单独处理。
+
+如下将展示使用 SIMD 优化后的 NTT。
+
+\begin{lstlisting}[title=NTT with SIMD,frame=trbl,language={c++}]
+void NTT(int op, int *F, uint32x2_t *G, int lmt, int mod){
+    //原根和原根求逆，用费马小定理计算
+    int g = 3, gi = qp(3, mod - 2, mod);
+    //蝴蝶变换
+    for(int i = 0; i < lmt; ++i)
+        if(i < r[i]) std::swap(F[i], F[r[i]]);
+    //步长小于2时无法向量化，直接计算
+    for(int i = 0; i < lmt; i += 2) {
+        int x = F[i], y = F[i + 1];
+        F[i] = x + y;
+        F[i] = F[i] >= mod ? F[i] - mod : F[i];
+        F[i + 1] = x - y;
+        F[i + 1] = F[i + 1] < 0 ? F[i + 1] + mod : F[i + 1];
+    }
+    //转换为Montgomery空间上的向量
+    for(int i = 0; i < lmt; i += 2)
+        G[i >> 1] = cal.to_mont((uint32x2_t){F[i], F[i + 1]});
+    for(int mid = 2; mid < lmt; mid <<= 1) {
+        int wn = qp(op ? g : gi, (mod - 1) / (mid << 1), mod);
+        //每次走两步，需要将步长设置为2
+        uint32x2_t Wn = cal.to_mont(vdup_n_u32(1ll * wn * wn % mod));
+        for(int i = 0, R = mid << 1; i < lmt; i += R) {
+            uint32x2_t w = cal.to_mont((uint32x2_t){ 1, wn });
+            //每次走两步
+            for(int j = 0; j < mid; j += 2, w = cal.multiply(w, Wn)) {
+                uint32x2_t x = G[(i + j) >> 1], y = cal.multiply(w, G[(i + j + mid) >> 1]);
+                G[(i + j) >> 1] = cal.add(x, y);
+                G[(i + j + mid) >> 1] = cal.sub(x, y);
+            }
+        }
+    }
+}
+\end{lstlisting}
+
+\subsubsection{实现片段（来自源码）}
+
+为了便于纸面阅读，本文将源码摘录替换为上文中的伪代码和注释；完整实现请参见工程源文件（main.cc / ntt_simd.cpp）。 
+
+\section{性能测试}
+
+% ...existing performance tables...
+
+\section{DIF \& DIT}
+
+DIT 和 DIF 分别对应两种不同的 FFT 方法，若我们将离散傅里叶变换 DFT 和蝴蝶变换 butterfly 看成线性变换，将 $x$ 看成需要变换的序列，那么我们有：
+
+$$DIT(x) = (butterfly \times DFT)(x)$$
+$$DIF(x) = (DFT \times butterfly)(x)$$
+
+注意到矩阵乘法满足结合律，同时蝴蝶变换本身就是自己的逆变换，因此使用 DIF 的方法完成 DFT，使用 DIT 的方法完成 iDFT，则可以在运算过程中不进行蝴蝶变换，可以极大的增加效率，减少运行时间。同时，由于不需要进行蝴蝶变换，我们也就不需要将数列在 uint32x2\_t 和 uint32\_t 之间转化，也可以带来效率上的提升。
+
+DIF 与之前实现的 DIT 分别是从时域和频域两个角度考虑得出的算法(也可以从线性变换的角度考虑)，但是代码类似，这里不加以赘述，实现后运行时间和 CPI 如下：
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|cccc|}
+\toprule
+Run Time($\mu s$) & 数据1 & 数据2 & 数据3 & 数据4 \\
+\midrule
+SIMD & 0.02958 & 67.5493 & 65.5669 & 65.2759 \\
+Trivial & 0.03002 & 85.2092 & 88.5152 & 92.8713 \\
+DIF \& DIT & 0.355111 & 50.241 & 50.0509 & 50.1459 \\
+\bottomrule
+\end{tabular}
+\caption{运行时间}  % 可选标题
+\label{tab:example} % 可选标签
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|ccc|}
+\toprule
+& Instructions & Circles & CPI\\
+\midrule
+SIMD & 2,174,970,297 & 1,061,352,989 & 0.48 \\
+Trivial & 2,170,644,679 & 1,235,547,703 & 0.57 \\
+DIF \& DIT & 2,139,984,397 & 969,957,883 & 0.45 \\
+\bottomrule
+\end{tabular}
+\caption{CPI}  % 可选标题
+\label{tab:example} % 可选标签
+\end{table}
+
+\section{总结}
+
+通过使用 SIMD 优化后的 NTT 在性能上有了极大的提升。注意到使用 SIMD 后程序指令数(Instructions) 并没有下降而是升高（因为我们需要将数转化成 uint32x2\_t 向量中，还要将数转化成 Montgomery 形式），但是 CPI 得到了极大的提升，这正是使用 SIMD ，在单条指令下进行多条数据处理所带来的。
+
+而在使用 DIT，DIF 进行优化，删除蝴蝶变换后，CPI 下降并不显著（这里 CPI 的下降是由于删除蝴蝶变换后 SIMD 在程序中的占比增多），但是指令数有所下降，导致运行的时钟周期减少很多。
+
+这两种优化实际上启发我们在对程序进行并行优化时可以从下面三个方面进行考虑：
+
+\begin{enumerate}
+    \item 使用更优秀的 SIMD 指令，从而使程序的 CPI 降低
+    \item 调整 SIMD 在程序中的占比，使 SIMD 占比更多，从而变相的降低 CPI
+    \item 通过优化算法将不必要的部分删除掉，从而降低程序运行的指令数，进而降低运行时间
+\end{enumerate}
+
+\end{document}
